@@ -68,10 +68,16 @@ function relativeLineNumbers(lineNo: number, state: EditorState) {
 
   const folds = foldedRanges(state)
   let foldedCount = 0
-  folds.between(start, stop, (from, to) => {
+  let foldedIntervals: [number, number][] = [];
+  folds.between(start, stop - 1, (from, to) => {
     let rangeStart = state.doc.lineAt(from).number
     let rangeStop = state.doc.lineAt(to).number
+    let withinExistingInterval = foldedIntervals.some(([intervalStart, intervalStop]) =>
+      intervalStart < rangeStart && rangeStart < intervalStop
+    );
+    if (withinExistingInterval) return;
     foldedCount += rangeStop - rangeStart
+    foldedIntervals.push([rangeStart, rangeStop]);
   })
 
   if (lineNo === cursorLine) {
